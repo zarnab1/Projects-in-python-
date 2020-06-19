@@ -1,0 +1,322 @@
+import os
+import shutil
+
+# get current working dir
+cur = os.getcwd()
+
+# list all dir/files in path
+path = "caltech-original-prepared"
+path_dirs = os.listdir(path)
+
+#joining two directories
+train_dir = os.path.join(path, "train")
+test_dir = os.path.join(path, "test")
+
+
+#merged new folder for joining the data
+merged_data = os.path.join(path, "merged-data")
+if not ((os.path.exists(merged_data))):
+    os.mkdir(merged_data)
+
+# counting total files/records in any dir
+classes = os.listdir(train_dir)
+len_classes = len(classes)
+
+# making 101 folders in merged_data folder
+for _class in classes:
+    clas = os.path.join(merged_data,_class)
+    if(not(os.path.exists(clas))):
+        os.mkdir(clas)
+test_image_list = []
+train_image_list = []
+
+#copying from test directory to merged-data
+for class_ in classes:
+    src = os.path.join(test_dir, class_)
+    des = os.path.join(merged_data, class_)
+    fnames = os.listdir(src)
+    test_image_list.append(len(fnames))
+    for fname in fnames:
+        isrc = os.path.join(src, fname)
+        ides = os.path.join(des, fname)
+        shutil.copy(isrc,ides)
+
+#copying from train directory to merged-data
+for class_ in classes:
+    src = os.path.join(train_dir, class_)
+    des = os.path.join(merged_data, class_)
+    fnames = os.listdir(src)
+    train_image_list.append(len(fnames))
+    for fname in fnames:
+        isrc = os.path.join(src, fname)
+        ides = os.path.join(des, fname)
+        shutil.copy(isrc,ides)
+
+#total images per class (for the graph)
+image_count_per_class = [test_image_list[i] + train_image_list[i] for i in range(len(test_image_list))] 
+
+
+#graph of original dataset
+import matplotlib.pyplot as plt
+import numpy as np
+index = np.arange(len(classes))
+plt.figure(figsize=(20,10))
+plt.bar(classes,image_count_per_class)
+plt.xlabel('Image Classes',fontsize=15)
+plt.ylabel('Number of Images per class',fontsize=15)
+plt.xticks(index,classes,rotation=90)
+plt.show()
+
+#coutning classes which contains less than 100 images
+less_than_100_imgs_classes = 0
+for i in range(len_classes):
+    if (image_count_per_class[i] < 100):
+        less_than_100_imgs_classes = less_than_100_imgs_classes + 1
+print('There are '+str(less_than_100_imgs_classes)+' classes which have less than 100 images')
+
+import os
+import random
+from scipy import ndarray
+
+# image processing library
+import skimage as sk
+from skimage import transform
+from skimage import util
+from skimage import io
+
+def random_rotation(image_array: ndarray):
+    # pick a random degree of rotation between 25% on the left and 25% on the right
+    random_degree = random.uniform(-25, 25)
+    return sk.transform.rotate(image_array, random_degree)
+
+def random_noise(image_array: ndarray):
+    # add random noise to the image
+    return sk.util.random_noise(image_array)
+
+def horizontal_flip(image_array: ndarray):
+    # horizontal flip doesn't need skimage, it's easy as flipping the image array of pixels !
+    return image_array[:, ::-1]
+
+# dictionary of the transformations we defined earlier
+available_transformations = {
+    'rotate': random_rotation,
+    'noise': random_noise,
+    'horizontal_flip': horizontal_flip
+}
+
+#making aumented directory and copy the images to that directory
+directory_list = []
+augmented_dir = os.path.join(path,'augmented_dir')
+if (not(os.path.exists(augmented_dir))):
+    os.mkdir(augmented_dir)
+for class1 in classes:
+    folder_path_ = os.path.join(merged_data, class1)
+    
+    # find all files paths from the folder
+    images1 = [os.path.join(folder_path_, f) for f in os.listdir(folder_path_) if os.path.isfile(os.path.join(folder_path_, f))]
+    
+    if(len(images1) >= 100):
+        dirr = os.path.join(augmented_dir,class1)
+        
+        if(not(os.path.exists(dirr))):
+            os.mkdir(dirr)
+            directory_list.append(dirr)
+#Augmentation of data
+for class_ in os.listdir(augmented_dir):
+    folder_path = os.path.join(merged_data, class_)#des
+    #folder_path = des
+    save_path = os.path.join(augmented_dir, class_)
+    num_files_desired = 1000
+    
+    # find all files paths from the folder
+    images = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+    num_generated_files = 0
+    
+    while num_generated_files <= num_files_desired:
+        # random image from the folder
+        image_path = random.choice(images)
+        # read image as an two dimensional array of pixels
+        image_to_transform = sk.io.imread(image_path)
+        # random num of transformation to apply
+        num_transformations_to_apply = random.randint(1, len(available_transformations))
+
+        num_transformations = 0
+        transformed_image = None
+        
+        while num_transformations <= num_transformations_to_apply:
+            # random transformation to apply for a single image
+            key = random.choice(list(available_transformations))
+            transformed_image = available_transformations[key](image_to_transform)
+            num_transformations += 1
+            
+        
+        new_file_path = '%s/image_aug_%s.jpg' % (save_path, num_generated_files)
+
+        # write image to the disk
+        io.imsave(new_file_path, transformed_image)
+        num_generated_files += 1
+
+#graph of augmented dataset
+import matplotlib.pyplot as plt
+import numpy as np
+
+aug_classes = os.listdir(augmented_dir)
+aug_count_list = []
+for aug_classe in aug_classes:
+    pathh = os.path.join(augmented_dir, aug_classe)
+    imgs = [os.path.join(pathh, f) for f in os.listdir(pathh) if os.path.isfile(os.path.join(pathh, f))]
+    aug_count_list.append(len(imgs))
+
+index = np.arange(len(aug_classes))
+plt.figure(figsize=(20,10))
+plt.bar(aug_classes,aug_count_list)
+plt.xlabel('Image Classes',fontsize=15)
+plt.ylabel('Number of Images per class',fontsize=15)
+plt.xticks(index,aug_classes,rotation=0)
+plt.show()
+#creating new train test and validate folders
+new_train_test = os.path.join(path,'new_train_test')
+if (not(os.path.exists(new_train_test))):
+    os.mkdir(new_train_test)
+
+new_train = os.path.join(new_train_test,'train')
+new_test = os.path.join(new_train_test,'test')
+new_validate = os.path.join(new_train_test,'validate')
+
+if (not(os.path.exists(new_train) and os.path.exists(new_test) and os.path.exists(new_validate))):
+    os.mkdir(new_train)
+    os.mkdir(new_test)    
+    os.mkdir(new_validate)
+# making folders in merged_data folder
+for a_class in aug_classes:
+    dir_tmp = os.path.join(new_test,a_class)
+    if(not(os.path.exists(dir_tmp))):
+        os.mkdir(dir_tmp)
+
+for a_class in aug_classes:
+    dir_tmp = os.path.join(new_train,a_class)
+    if(not(os.path.exists(dir_tmp))):
+        os.mkdir(dir_tmp)
+        
+
+for a_class in aug_classes:
+    dir_tmp = os.path.join(new_validate,a_class)
+    if(not(os.path.exists(dir_tmp))):
+        os.mkdir(dir_tmp)
+#copying from augmented directory to new_test_train
+for class_ in aug_classes:
+    src = os.path.join(augmented_dir, class_)
+    des = os.path.join(new_train, class_)
+    fnames = ['image_aug_{}.jpg'.format(i) for i in range(800)]
+    for fname in fnames:
+            isrc = os.path.join(src, fname)
+            ides = os.path.join(des, fname)
+            shutil.copy(isrc,ides)
+        
+for class_ in aug_classes:
+    src = os.path.join(augmented_dir, class_)
+    des = os.path.join(new_test, class_)
+    fnames = ['image_aug_{}.jpg'.format(i) for i in range(800,900)]
+    for fname in fnames:
+            isrc = os.path.join(src, fname)
+            ides = os.path.join(des, fname)
+            shutil.copy(isrc,ides)
+            
+for class_ in aug_classes:
+    src = os.path.join(augmented_dir, class_)
+    des = os.path.join(new_validate, class_)
+    fnames = ['image_aug_{}.jpg'.format(i) for i in range(900,1000)]
+    for fname in fnames:
+            isrc = os.path.join(src, fname)
+            ides = os.path.join(des, fname)
+            shutil.copy(isrc,ides)
+
+
+from keras import layers
+from keras import models
+
+model = models.Sequential()
+model.add(layers.Conv2D(32, (3,3), activation='relu', input_shape=(200,200,3)))
+model.add(layers.MaxPooling2D((2,2)))
+model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(128, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Conv2D(128, (3, 3), activation='relu'))
+model.add(layers.MaxPooling2D((2, 2)))
+model.add(layers.Flatten())
+model.add(layers.Dense(512, activation='relu'))
+model.add(layers.Dense(11, activation='softmax'))
+from keras import optimizers
+
+model.compile(loss='categorical_crossentropy',
+              optimizer='rmsprop',
+              metrics=['acc'])
+from keras.preprocessing.image import ImageDataGenerator
+
+# All images will be rescaled by 1./255
+train_datagen = ImageDataGenerator(rescale=1./255)
+test_datagen = ImageDataGenerator(rescale=1./255)
+
+train_generator = train_datagen.flow_from_directory(
+        # This is the target directory
+        new_train,
+        # All images will be resized to 150x150
+        target_size=(200, 200),
+        batch_size=10,
+        # Since we use categorical_crossentropy loss, we need categorical labels
+        class_mode='categorical')
+
+validation_generator = test_datagen.flow_from_directory(
+        new_validate,
+        target_size=(200, 200),
+        batch_size=10,
+        class_mode='categorical')
+history = model.fit_generator(
+      train_generator,
+      steps_per_epoch=50,
+      epochs=5,
+      validation_data=validation_generator,
+      validation_steps=30)
+model.save('caltech_model.h5')
+import matplotlib.pyplot as plt
+
+acc = history.history['acc']
+val_acc = history.history['val_acc']
+loss = history.history['loss']
+val_loss = history.history['val_loss']
+
+epochs = range(len(acc))
+
+plt.plot(epochs, acc, 'bo', label='Training acc')
+plt.plot(epochs, val_acc, 'b', label='Validation_acc')
+plt.title('Training and validation accuracy')
+plt.legend()
+
+plt.figure()
+
+plt.plot(epochs, loss, 'bo', label='Training loss')
+plt.plot(epochs, val_loss, 'b', label='Validation loss')
+plt.title('Training and validation loss')
+plt.legend()
+
+plt.show()
+#prediction
+import numpy as np
+from tensorflow.keras.models import load_model
+import numpy as np
+from keras.preprocessing.image import load_img
+from keras.preprocessing.image import img_to_array
+classifier = load_model('caltech_model.h5')
+
+# load the image
+img = load_img('image_aug_0.jpg', target_size=(200, 200))
+# convert to array
+img = img_to_array(img)
+# reshape into a single sample with 3 channels
+img = img.flatten().reshape(1,200,200,3)
+# center pixel data
+img = img.astype('float32')
+result = classifier.predict(img)
+print(np.argmax(result))
+aug_classes[np.argmax(result)]
