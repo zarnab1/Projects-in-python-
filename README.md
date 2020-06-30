@@ -3,7 +3,7 @@ So here are the projects I had done in Data Science
 #PROJECT 1#
 <br />
 
-**Project 1 is related to data augmentation **
+**Project 1 is related to data augmentation**
 <br />
 This incraeses the data as to yield better results
 <br />
@@ -21,7 +21,7 @@ the algorithms will prove that model is accurate at prediction
 <br />
 #PROJECT 3#
 <br />
-**Project 3 is related to coil **
+**Project 3 is related to coil**
 
 <br />
 in this we have loaded images.
