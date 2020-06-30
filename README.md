@@ -10,6 +10,7 @@ This incraeses the data as to yield better results
 
 # PROJECT 2
 <br />
+
 ## Project 2 is Project Credit Card Application
 <br />
 I have done this project from DataCamp
@@ -23,6 +24,7 @@ the algorithms will prove that model is accurate at prediction
 
 # PROJECT 3
 <br />
+
 ## Project 3 is related to coil
 <br />
 in this we have loaded images.
