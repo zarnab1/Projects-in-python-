@@ -1,13 +1,13 @@
 ![alt text](https://ourcodeworld.com/public-media/articles/articleocw-5c65fbda1ea05.jpg)
 So here are the projects I had done in Data Science
-#PROJECT 1#
+## PROJECT 1
 <br />
 **Project 1 is related to data augmentation**
 <br />
 This incraeses the data as to yield better results
 <br />
 
-#PROJECT 2#
+## PROJECT 2
 <br />
 **Project 2 is Project Credit Card Application**
 <br />
@@ -20,7 +20,7 @@ the algorithms will prove that model is accurate at prediction
 <br />
 
 
-#PROJECT 3#
+## PROJECT 3
 <br />
 **Project 3 is related to coil**
 <br />
